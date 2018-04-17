@@ -89,6 +89,23 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		safeEncrypt.setDisplayedMnemonicIndex(1);
 		safeEncrypt.setSelected(true);
 		optionsMenu.add(safeEncrypt);
+		safeEncrypt.addItemListener(new ItemListener()
+		{
+			@Override
+			public void itemStateChanged(ItemEvent e)
+			{
+				if(e.getStateChange() == ItemEvent.SELECTED)
+				{
+					Encryptor.safeEncrypt = true;
+					System.out.println("Safe Encrypt ENABLED");
+				}
+				if(e.getStateChange() == ItemEvent.DESELECTED)
+				{
+					Encryptor.safeEncrypt = false;
+					System.out.println("Safe Encrypt DISABLED");
+				}
+			}
+		});
 
 		outputLog = new JCheckBoxMenuItem("Output Log");
 		outputLog.setMnemonic(KeyEvent.VK_O);
@@ -153,7 +170,7 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 			System.out.println("Help!");
 
 		if(e.getSource().equals(tutorialLink))
-			openWebpage("https://www.youtube.com/watch?v=z-nfbDXTiHg");
+			openWebpage("https://www.youtube.com/watch?v=7R8IUnq9kEs");
 	}
 
 	@Override

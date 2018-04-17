@@ -14,16 +14,17 @@ import java.util.Map;
 //          This encryptor uses AES encryption algorithm with a 256 bit key and random iv values for extreme security.
 //          it only requires the 256 bit or 32 char key/password to decrypt the files for ease of access.
 
-//TO DO:    prompt the user to enter a key or generate a random one (choose either 128bit or 256bit key)
+//TO DO:DONEprompt the user to enter a key or generate a random one
 //          drag and drop files into the window to select them.
 //          create a list like UI interface to select / deselect files for encryption / decryption
-//          Have an option for safe encryption or not (safe encryption doesnt overwrite or delete the original file, just adds a .encrypted and .decrypted file.)
+//   DONE   Have an option for safe encryption or not (safe encryption doesnt overwrite or delete the original file, just adds a .encrypted and .decrypted file.)
 public class Encryptor
 {
 	private static ArrayList<File> files;
 	//you can either use a 128 bit or 256 bit key.
 	//16 chars = 128 bit | 32 chars = 256 bit.
 	private static String key = "]KPYqg$:izYBp~'n]KPYqg$:izYBp~'n";
+	public static boolean safeEncrypt = true;
 
 	public Encryptor()
 	{
@@ -45,6 +46,9 @@ public class Encryptor
 				File inputFile = files.get(i);
 				File encryptedFile = new File(files.get(i).getAbsolutePath()+".encrypted");
 				CryptoUtils.encrypt(Encryptor.key, inputFile, encryptedFile);
+				if(!safeEncrypt)
+					inputFile.delete();
+
 			} catch(Exception ex)
 			{
 				ex.printStackTrace();
@@ -66,8 +70,17 @@ public class Encryptor
 			try
 			{
 				File encryptedFile = files.get(i);
-				File decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10)+".decrypted");
+				File decryptedFile;
+
+				if(safeEncrypt)
+					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10)+".decrypted");
+				else
+					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10));
+
 				CryptoUtils.decrypt(Encryptor.key, encryptedFile, decryptedFile);
+				if(!safeEncrypt)
+					encryptedFile.delete();
+
 			} catch(Exception ex)
 			{
 				ex.printStackTrace();
@@ -161,10 +174,11 @@ public class Encryptor
 		HashSet<File> set = new HashSet<>();
 
 		// Loop over argument list.
-		for (File item : Encryptor.files) {
-
+		for (File item : Encryptor.files)
+		{
 			// If File is not in set, add it to the list and the set.
-			if (!set.contains(item)) {
+			if (!set.contains(item))
+			{
 				result.add(item);
 				set.add(item);
 			}
@@ -202,8 +216,10 @@ public class Encryptor
 	private static void fixKeyLength() {
 		String errorString = "Failed manually overriding key-length permissions.";
 		int newMaxKeyLength;
-		try {
-			if ((newMaxKeyLength = Cipher.getMaxAllowedKeyLength("AES")) < 256) {
+		try
+		{
+			if ((newMaxKeyLength = Cipher.getMaxAllowedKeyLength("AES")) < 256)
+			{
 				Class c = Class.forName("javax.crypto.CryptoAllPermissionCollection");
 				Constructor con = c.getDeclaredConstructor();
 				con.setAccessible(true);
@@ -230,7 +246,8 @@ public class Encryptor
 
 				newMaxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
 			}
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			throw new RuntimeException(errorString, e);
 		}
 		if (newMaxKeyLength < 256)

@@ -4,9 +4,6 @@ import java.awt.*;
 import java.io.PrintStream;
 
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.text.DefaultCaret;
 
 public class Display
@@ -92,6 +89,7 @@ public class Display
 		//panel.add(consoleScroll, c);
 
 		frame.setJMenuBar(menuBar.getJMenuBar());
+		frame.setIconImage(new ImageIcon(getClass().getResource("/res/encryptor.png")).getImage());
 		frame.add(panel);
 		frame.pack();
 	}

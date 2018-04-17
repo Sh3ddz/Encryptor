@@ -1,13 +1,10 @@
 package main;
 
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
 import java.io.IOException;
 
 import display.Display;
-import display.MenuBar;
 import encryption.Encryptor;
 
 public class Application implements Runnable
