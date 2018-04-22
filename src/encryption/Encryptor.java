@@ -1,5 +1,7 @@
 package encryption;
 
+import display.Display;
+
 import javax.crypto.Cipher;
 import javax.swing.*;
 import java.io.*;
@@ -21,24 +23,31 @@ import java.util.Map;
 public class Encryptor
 {
 	private static ArrayList<File> files;
-	//you can either use a 128 bit or 256 bit key.
-	//16 chars = 128 bit | 32 chars = 256 bit.
+	//256 bit key, 32 chars.
 	private static String key = "]KPYqg$:izYBp~'n]KPYqg$:izYBp~'n";
 	public static boolean safeEncrypt = true;
+
+	private static final int ENCRYPT = 1;
+	private static final int DECRYPT = 2;
 
 	public Encryptor()
 	{
 		files = new ArrayList<>();
-
 		fixKeyLength();
+	}
+
+	public static void setupEncryption()
+	{
+		promptKeyChoice();
+
+		Display.setupProgressBar(ENCRYPT);
 	}
 
 	public static void encryptSelectedFiles()
 	{
 		System.out.println("Encrypting files please wait...");
-		//Encryption
-		//if there is no key, generate one.
-		promptKeyChoice();
+		ArrayList<File> encryptedFiles = new ArrayList<>();
+
 		for(int i = 0; i < files.size(); i++)
 		{
 			try
@@ -46,25 +55,37 @@ public class Encryptor
 				File inputFile = files.get(i);
 				File encryptedFile = new File(files.get(i).getAbsolutePath()+".encrypted");
 				CryptoUtils.encrypt(Encryptor.key, inputFile, encryptedFile);
+
+				Display.progressBar.setValue(i+1);
+				int percent = (int)(((double)(i+1)/(double)(files.size()))*100);
+				Display.progressText.setText("Encrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"%");
+
 				if(!safeEncrypt)
 					inputFile.delete();
-
+				encryptedFiles.add(encryptedFile);
 			} catch(Exception ex)
 			{
 				ex.printStackTrace();
 			}
 		}
-
+		files = encryptedFiles;
 		System.out.println("File Encryption done, thank you!");
+	}
+
+	public static void setupDecryption()
+	{
+		removeNonEncryptedFiles();
+		removeRepeatFiles();
+		promptKey();
+
+		Display.setupProgressBar(DECRYPT);
 	}
 
 	public static void decryptSelectedFiles()
 	{
 		System.out.println("Decrypting files please wait...");
+		ArrayList<File> decryptedFiles = new ArrayList<>();
 
-		removeNonEncryptedFiles();
-		printInformation();
-		promptKey();
 		for(int i = 0; i < files.size(); i++)
 		{
 			try
@@ -78,15 +99,20 @@ public class Encryptor
 					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10));
 
 				CryptoUtils.decrypt(Encryptor.key, encryptedFile, decryptedFile);
+
+				Display.progressBar.setValue(i+1);
+				int percent = (int)(((double)(i+1)/(double)(files.size()))*100);
+				Display.progressText.setText("Decrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"%");
+
 				if(!safeEncrypt)
 					encryptedFile.delete();
-
+				decryptedFiles.add(decryptedFile);
 			} catch(Exception ex)
 			{
 				ex.printStackTrace();
 			}
 		}
-
+		files = decryptedFiles;
 		System.out.println("File Decryption done, thank you!");
 	}
 
@@ -159,6 +185,7 @@ public class Encryptor
 	{
 		Encryptor.files = files;
 	}
+	public static ArrayList<File> getFiles() { return files; }
 
 	public static void addFiles(ArrayList<File> files)
 	{
@@ -209,7 +236,7 @@ public class Encryptor
 	public static void clearSelectedFiles()
 	{
 		Encryptor.files.clear();
-		System.out.println("Cleared selected files");
+		System.out.println("Cleared selected files.");
 	}
 
 	//wasnt allowing 256 key length for some reason, so added this

@@ -49,15 +49,6 @@ public class Application implements Runnable
 
 	private void render()
 	{
-		//bs = display.getCanvas().getBufferStrategy();
-		//if(bs == null)
-		//{
-		//	display.getCanvas().createBufferStrategy(3); //original is 3
-		//	return;
-		//}
-		//g = bs.getDrawGraphics();
-		//Clear Screen
-		//g.clearRect(0, 0, width, height);
 		//Draw Here!
 		width = display.getFrame().getWidth();
 		height = display.getFrame().getHeight();

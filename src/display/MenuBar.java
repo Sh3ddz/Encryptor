@@ -161,10 +161,12 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 			Encryptor.clearSelectedFiles();
 
 		if(e.getSource().equals(encrypt))
-			Encryptor.encryptSelectedFiles();
+			Encryptor.setupEncryption();
+			//Encryptor.encryptSelectedFiles();
 
 		if(e.getSource().equals(decrypt))
-			Encryptor.decryptSelectedFiles();
+			Encryptor.setupDecryption();
+			//Encryptor.decryptSelectedFiles();
 
 		if(e.getSource().equals(helpMenu))
 			System.out.println("Help!");
@@ -222,6 +224,7 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		{
 			try
 			{
+				System.out.println("Opening "+uri+" on the default browser");
 				desktop.browse(uri);
 				return true;
 			} catch (Exception e)

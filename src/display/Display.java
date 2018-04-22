@@ -1,5 +1,7 @@
 package display;
 
+import encryption.Encryptor;
+
 import java.awt.*;
 import java.io.PrintStream;
 
@@ -9,12 +11,15 @@ import javax.swing.text.DefaultCaret;
 public class Display
 {
 
-	private JFrame frame;
+	private static JFrame frame;
 	private static JPanel panel;
 	private Canvas canvas;
 	private MenuBar menuBar;
 	private JTextArea console;
 	private static JScrollPane consoleScroll;
+
+	public static JProgressBar progressBar;
+	public static JLabel progressText;
 
 	private static GridBagConstraints c = new GridBagConstraints();
 
@@ -59,7 +64,6 @@ public class Display
 
 		consoleScroll = new JScrollPane(console, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		consoleScroll.setPreferredSize(new Dimension(width, height/2));
-		//consoleScroll.setLocation(0, height / 2);
 
 		panel = new JPanel(new GridBagLayout());
 		panel.setPreferredSize(new Dimension(width, height));
@@ -86,7 +90,6 @@ public class Display
 		c.gridwidth = 2;
 		c.gridx = 0;
 		c.gridy = 1;
-		//panel.add(consoleScroll, c);
 
 		frame.setJMenuBar(menuBar.getJMenuBar());
 		frame.setIconImage(new ImageIcon(getClass().getResource("/res/encryptor.png")).getImage());
@@ -94,12 +97,59 @@ public class Display
 		frame.pack();
 	}
 
+	public static void setupProgressBar(int mode)
+	{
+		final JDialog dlg;
+		if(mode == 1)
+		{
+			dlg = new JDialog(Display.getFrame(), "Encrypting Files...", true);
+			progressBar = new JProgressBar(0, Encryptor.getFiles().size());
+			progressText = new JLabel("Encrypting Files: ");
+		}
+		else
+		{
+			dlg = new JDialog(Display.getFrame(), "Decrypting Files...", true);
+			progressBar = new JProgressBar(0, Encryptor.getFiles().size());
+			progressText = new JLabel("Decrypting Files: ");
+		}
+		dlg.add(BorderLayout.CENTER, progressBar);
+		dlg.add(BorderLayout.NORTH, progressText);
+		dlg.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		dlg.setSize(300, 75);
+		dlg.setLocationRelativeTo(frame);
+
+		SwingWorker<Void, Void> sw =
+				new SwingWorker<Void, Void>()
+				{
+					@Override
+					protected Void doInBackground() throws Exception
+					{
+						if(mode ==1)
+							Encryptor.encryptSelectedFiles();
+						else
+							Encryptor.decryptSelectedFiles();
+
+						setProgress(100);
+						return null;
+					}
+
+					@Override
+					protected void done()
+					{
+						dlg.dispose();//close the modal dialog
+					}
+				};
+
+		sw.execute(); // this will start the processing on a separate thread
+		dlg.setVisible(true);
+	}
+
 	public Canvas getCanvas()
 	{
 		return canvas;
 	}
 
-	public JFrame getFrame()
+	public static JFrame getFrame()
 	{
 		return frame;
 	}
@@ -109,7 +159,7 @@ public class Display
 		return menuBar;
 	}
 
-	public static void openConsole()
+	protected static void openConsole()
 	{
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 2;
@@ -119,7 +169,7 @@ public class Display
 		panel.updateUI();
 	}
 
-	public static void closeConsole()
+	protected static void closeConsole()
 	{
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 2;
