@@ -93,7 +93,6 @@ public class FileSelectionUtils
 			}
 
 			Encryptor.addFiles(files);
-			Encryptor.printInformation();
 		}
 	}
 }

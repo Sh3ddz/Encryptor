@@ -69,6 +69,7 @@ public class Encryptor
 			}
 		}
 		files = encryptedFiles;
+		Display.updateList(files);
 		System.out.println("File Encryption done, thank you!");
 	}
 
@@ -113,6 +114,7 @@ public class Encryptor
 			}
 		}
 		files = decryptedFiles;
+		Display.updateList(files);
 		System.out.println("File Decryption done, thank you!");
 	}
 
@@ -190,6 +192,9 @@ public class Encryptor
 	public static void addFiles(ArrayList<File> files)
 	{
 		Encryptor.files.addAll(files);
+		Encryptor.removeRepeatFiles();
+		Display.updateList(files);
+		Encryptor.printInformation();
 	}
 
 	public static void removeRepeatFiles()
@@ -231,11 +236,13 @@ public class Encryptor
 		{
 			files.remove(nonEnc.get(i));
 		}
+		Display.updateList(files);
 	}
 
 	public static void clearSelectedFiles()
 	{
 		Encryptor.files.clear();
+		Display.updateList(files);
 		System.out.println("Cleared selected files.");
 	}
 
