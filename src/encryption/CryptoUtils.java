@@ -36,7 +36,7 @@ public class CryptoUtils
 		try
 		{
 			FileInputStream inputStream = new FileInputStream(inputFile);
-			FileOutputStream outputStream = new FileOutputStream(outputFile);
+			FileOutputStream output = new FileOutputStream(outputFile);
 
 			generateSecretKey(key);
 
@@ -52,11 +52,17 @@ public class CryptoUtils
 			}
 			System.out.println();
 			*/
+			output.write(iv);
 
-			byte[] inputBytes = new byte[(int) inputFile.length()];
-			inputStream.read(inputBytes);
+			CipherOutputStream outputStream = new CipherOutputStream(output, cipher);
 
-			byte[] outputBytes = cipher.doFinal(inputBytes);
+			byte[] buffer = new byte[8192];
+			int count;
+			while ((count = inputStream.read(buffer)) > 0)
+			{
+				outputStream.write(buffer, 0, count);
+			}
+
 			//output for debugging
 			/*
 			for(int i = 0; i < outputBytes.length; i++)
@@ -65,9 +71,6 @@ public class CryptoUtils
 			}
 			System.out.println();
 			*/
-
-			outputStream.write(iv);
-			outputStream.write(outputBytes);
 
 			inputStream.close();
 			outputStream.close();
@@ -83,7 +86,6 @@ public class CryptoUtils
 		try
 		{
 			FileInputStream inputStream = new FileInputStream(inputFile);
-			FileOutputStream outputStream = new FileOutputStream(outputFile);
 
 			generateSecretKey(key);
 
@@ -100,8 +102,15 @@ public class CryptoUtils
 			Cipher cipher = Cipher.getInstance(TRANSFORMATION);
 			cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
 
-			byte[] inputBytes = new byte[(int) inputFile.length()-iv.length]; //subtracting the iv length so it doesnt read extra bits at the end.
-			inputStream.read(inputBytes);
+			CipherOutputStream outputStream = new CipherOutputStream(new FileOutputStream(outputFile), cipher);
+
+			byte[] buffer = new byte[8192];
+			int count;
+			while ((count = inputStream.read(buffer)) > 0)
+			{
+				outputStream.write(buffer, 0, count);
+			}
+
 			//output for debugging
 			/*
 			for(int i = 0; i < inputBytes.length; i++)
@@ -110,10 +119,6 @@ public class CryptoUtils
 			}
 			System.out.println();
 			*/
-
-			byte[] outputBytes = cipher.doFinal(inputBytes);
-
-			outputStream.write(outputBytes);
 
 			inputStream.close();
 			outputStream.close();

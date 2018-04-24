@@ -193,7 +193,7 @@ public class Encryptor
 	{
 		Encryptor.files.addAll(files);
 		Encryptor.removeRepeatFiles();
-		Display.updateList(files);
+		Display.updateList(Encryptor.files);
 		Encryptor.printInformation();
 	}
 
