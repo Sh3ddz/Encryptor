@@ -4,6 +4,9 @@ import display.Display;
 
 import javax.crypto.Cipher;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.*;
 import java.util.ArrayList;
 import java.lang.reflect.Constructor;
@@ -143,16 +146,33 @@ public class Encryptor
 			randKey += toAppend;
 		}
 
+		showKey(randKey);
+
+		Encryptor.key = randKey;
+	}
+
+	private static void showKey(String key)
+	{
 		JTextArea ta = new JTextArea(1, 32);
-		ta.setText(randKey);
+		ta.setText(key);
 		ta.setWrapStyleWord(true);
 		ta.setLineWrap(true);
 		ta.setCaretPosition(0);
 		ta.setEditable(false);
 
-		JOptionPane.showMessageDialog(null, new JScrollPane(ta), "YOUR RANDOM KEY(FOR DECRYPTING, PLEASE SAVE)", JOptionPane.INFORMATION_MESSAGE,null);
+		int n = JOptionPane.showOptionDialog(null, new JScrollPane(ta),"YOUR KEY, PLEASE SAVE.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+				null, new Object[] {"Copy to clipboard", "OK"}, JOptionPane.YES_OPTION);
 
-		Encryptor.key = randKey;
+		if (n == JOptionPane.YES_OPTION)
+		{
+			StringSelection stringSelection = new StringSelection(key);
+			Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
+			cb.setContents(stringSelection, null);
+			JOptionPane.showMessageDialog(null, "Copied to clipboard!", "Copied!", JOptionPane.INFORMATION_MESSAGE,null);
+ 		} else if (n == JOptionPane.NO_OPTION)
+		{
+			System.out.println("OK");
+		}
 	}
 
 	private static void getCustomKey()

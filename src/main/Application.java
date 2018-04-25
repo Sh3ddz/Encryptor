@@ -52,7 +52,6 @@ public class Application implements Runnable
 		//Draw Here!
 		width = display.getFrame().getWidth();
 		height = display.getFrame().getHeight();
-
 		//End Drawing!
 		//bs.show();
 		//g.dispose();

@@ -27,8 +27,8 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 	private ImageIcon remove = new ImageIcon(getClass().getResource("/res/removerepeat.png"));
 	private ImageIcon clear = new ImageIcon(getClass().getResource("/res/clear.png"));
 
-	private ImageIcon encryptImage = new ImageIcon(getClass().getResource("/res/encrypt.png"));
-	private ImageIcon decryptImage = new ImageIcon(getClass().getResource("/res/decrypt.png"));
+	protected ImageIcon encryptImage = new ImageIcon(getClass().getResource("/res/encrypt.png"));
+	protected ImageIcon decryptImage = new ImageIcon(getClass().getResource("/res/decrypt.png"));
 
 	private ImageIcon howTo = new ImageIcon(getClass().getResource("/res/howto.png"));
 	private ImageIcon tutorial = new ImageIcon(getClass().getResource("/res/tutorial.png"));
