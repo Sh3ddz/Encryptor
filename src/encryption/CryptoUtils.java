@@ -3,9 +3,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.security.*;
-import java.util.Arrays;
+import java.security.spec.InvalidKeySpecException;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 
@@ -14,45 +15,77 @@ public class CryptoUtils
 	private static final String ALGORITHM = "AES";
 	private static final String TRANSFORMATION = "AES/CBC/PKCS5Padding";
 	private static SecretKey secretKey;
+	private static byte[] salt;
+	/*
+	 *  Generates secure random salt value
+	 */
+	private static byte[] generateSalt()
+	{
+		SecureRandom random = new SecureRandom();
+		byte bytes[] = new byte[20];
+		random.nextBytes(bytes);
+		return bytes;
+	}
 
-	private static void generateSecretKey(String key)
+	/*
+	 *  Generates the secret key using the given password and salt values from the file
+	 */
+	private static void generateSecretKey(String password)
 	{
 		try
 		{
-			int keyLength = 32;
-			byte[] newKey = key.getBytes("UTF-8");
-			MessageDigest sha = MessageDigest.getInstance("SHA-1");
-			newKey = sha.digest(newKey);
-			newKey = Arrays.copyOf(newKey, keyLength); // use only first (amount, see above) of bits
-			secretKey = new SecretKeySpec(newKey, ALGORITHM);
-		} catch(Exception e)
+			if(salt == null)
+			{
+				salt = generateSalt();
+			}
+			SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+			PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+			SecretKey tmp = factory.generateSecret(spec);
+			CryptoUtils.secretKey = new SecretKeySpec(tmp.getEncoded(), ALGORITHM);
+		} catch(NoSuchAlgorithmException | InvalidKeySpecException e)
 		{
 			e.printStackTrace();
 		}
 	}
 
-	public static void encrypt(String key, File inputFile, File outputFile) throws CryptoException
+	public static void resetKeySpecs()
+	{
+		secretKey = null;
+		salt = null;
+	}
+
+	/*
+	 *  Encrypts the selected input file using the given password
+	 *  Generates the secret key given the password
+	 *  Generates a secure random IV for each file
+	 *
+	 *  Writes the IV, salt, and ciphertext to the output file.
+	 *  Using AES 256 bit encryption.
+	 */
+	public static void encrypt(String password, File inputFile, File outputFile) throws CryptoException
 	{
 		try
 		{
 			FileInputStream inputStream = new FileInputStream(inputFile);
 			FileOutputStream output = new FileOutputStream(outputFile);
 
-			generateSecretKey(key);
+			if(secretKey == null)
+				generateSecretKey(password);
 
 			Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-			cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-			AlgorithmParameters params = cipher.getParameters();
-			byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
-			//output for debugging
-			/*
-			for(int i = 0; i < iv.length; i++)
-			{
-				System.out.print(iv[i] + ", ");
-			}
-			System.out.println();
-			*/
+
+			byte[] iv = new byte[16];
+			SecureRandom random = new SecureRandom();
+			random.nextBytes(iv);
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
+
+			String header = "HEADER Encrypted using Encryptor";
+			byte[] headerBytes = header.getBytes("UTF-8");
+			headerBytes = cipher.doFinal(headerBytes);
+
+			output.write(headerBytes);
 			output.write(iv);
+			output.write(salt);
 
 			CipherOutputStream outputStream = new CipherOutputStream(output, cipher);
 
@@ -63,15 +96,6 @@ public class CryptoUtils
 				outputStream.write(buffer, 0, count);
 			}
 
-			//output for debugging
-			/*
-			for(int i = 0; i < outputBytes.length; i++)
-			{
-				System.out.print(outputBytes[i] + ", ");
-			}
-			System.out.println();
-			*/
-
 			inputStream.close();
 			outputStream.close();
 
@@ -81,26 +105,41 @@ public class CryptoUtils
 		}
 	}
 
-	public static void decrypt(String key, File inputFile, File outputFile) throws CryptoException
+	/*
+	 *  Decrypts the selected input file using the given password
+	 *  Reads the IV values from the file to use for decryption
+	 *  Reads the salt values from the file to use to generate the secret key
+	 *  Outputs the decrypted text to the selected output file
+	 *
+	 *  Using AES 256 bit encryption.
+	 */
+	public static void decrypt(String password, File inputFile, File outputFile) throws CryptoException
 	{
 		try
 		{
 			FileInputStream inputStream = new FileInputStream(inputFile);
-
-			generateSecretKey(key);
-
+			byte[] headerBytes = new byte[48];
+			inputStream.read(headerBytes);
 			byte[] iv = new byte[16];
 			inputStream.read(iv);
-			//output for debugging
-			/*
-			for(int i = 0; i < iv.length; i++)
-			{
-				System.out.print(iv[i] + ", ");
-			}
-			System.out.println();
-			*/
+			salt = new byte[20];
+			inputStream.read(salt);
+
+			if(secretKey == null)
+				generateSecretKey(password);
+
 			Cipher cipher = Cipher.getInstance(TRANSFORMATION);
 			cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+
+			//checking key
+			//if the key isn't valid
+			if(!checkKeyValidity(cipher, headerBytes))
+			{
+				System.out.println("WRONG KEY for file: " + inputFile.getAbsolutePath());
+				inputStream.close();
+				outputFile.delete();
+				return;
+			}
 
 			CipherOutputStream outputStream = new CipherOutputStream(new FileOutputStream(outputFile), cipher);
 
@@ -111,15 +150,6 @@ public class CryptoUtils
 				outputStream.write(buffer, 0, count);
 			}
 
-			//output for debugging
-			/*
-			for(int i = 0; i < inputBytes.length; i++)
-			{
-				System.out.print(inputBytes[i] + ", ");
-			}
-			System.out.println();
-			*/
-
 			inputStream.close();
 			outputStream.close();
 
@@ -127,5 +157,29 @@ public class CryptoUtils
 		{
 			throw new CryptoException("Error encrypting/decrypting file", ex);
 		}
+	}
+
+	/*
+     * Checks if the given decryption key is right
+     * returns true if the key is valid, returns false if the key is not valid
+	 */
+	private static boolean checkKeyValidity(Cipher cipher, byte[] headerBytes)
+	{
+		//checking if the key is right or not
+		try
+		{
+			headerBytes = cipher.doFinal(headerBytes);
+			String header = new String(headerBytes, "UTF-8");
+			if(!header.equals("HEADER Encrypted using Encryptor"))
+				return false;
+		} catch(BadPaddingException e)
+		{
+			e.printStackTrace();
+			return false;
+		} catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		return true;
 	}
 }

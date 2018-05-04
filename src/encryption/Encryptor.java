@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.*;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -23,11 +24,15 @@ import java.util.Map;
 //          drag and drop files into the window to select them.
 //          create a list like UI interface to select / deselect files for encryption / decryption
 //   DONE   Have an option for safe encryption or not (safe encryption doesnt overwrite or delete the original file, just adds a .encrypted and .decrypted file.)
+
+/*
+ * This class doesn't actually handle the encryption, but just about everything else.
+ */
 public class Encryptor
 {
 	private static ArrayList<File> files;
 	//256 bit key, 32 chars.
-	private static String key = "]KPYqg$:izYBp~'n]KPYqg$:izYBp~'n";
+	private static String password;
 	public static boolean safeEncrypt = true;
 
 	private static final int ENCRYPT = 1;
@@ -39,17 +44,25 @@ public class Encryptor
 		fixKeyLength();
 	}
 
+	/*
+	 *  Sets up for encryption
+	 *  Sets up the progress bar to show encryption progress
+	 */
 	public static void setupEncryption()
 	{
-		promptKeyChoice();
+		promptPasswordChoice();
 
 		Display.setupProgressBar(ENCRYPT);
 	}
 
+	/*
+	 *  Loops through the selected files list and encrypts them using the password entered by the user
+	 */
 	public static void encryptSelectedFiles()
 	{
 		System.out.println("Encrypting files please wait...");
 		ArrayList<File> encryptedFiles = new ArrayList<>();
+		long totalMegaBytes = 0;
 
 		for(int i = 0; i < files.size(); i++)
 		{
@@ -57,11 +70,12 @@ public class Encryptor
 			{
 				File inputFile = files.get(i);
 				File encryptedFile = new File(files.get(i).getAbsolutePath()+".encrypted");
-				CryptoUtils.encrypt(Encryptor.key, inputFile, encryptedFile);
+				CryptoUtils.encrypt(Encryptor.password, inputFile, encryptedFile);
 
 				Display.progressBar.setValue(i+1);
 				int percent = (int)(((double)(i+1)/(double)(files.size()))*100);
-				Display.progressText.setText("Encrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"%");
+				totalMegaBytes += (files.get(i).length()/1000000);
+				Display.progressText.setText("Encrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"% | "+totalMegaBytes+" MB");
 
 				if(!safeEncrypt)
 					inputFile.delete();
@@ -73,22 +87,34 @@ public class Encryptor
 		}
 		files = encryptedFiles;
 		Display.updateList(files);
+		CryptoUtils.resetKeySpecs();
 		System.out.println("File Encryption done, thank you!");
 	}
 
+	/*
+	 *  Sets up for smooth decryption
+	 *  removes non-encrypted files so it doesnt loop through and decrypt files that dont need to be
+	 *  removes repeated files for the same reason as above
+	 *  prompts the user to enter the password for decryption
+	 *  Sets up the progress bar to show decryption progress
+	 */
 	public static void setupDecryption()
 	{
 		removeNonEncryptedFiles();
 		removeRepeatFiles();
-		promptKey();
+		promptPassword();
 
 		Display.setupProgressBar(DECRYPT);
 	}
 
+	/*
+	 *  Loops through the selected files list and decrypts them using the password entered by the user
+	 */
 	public static void decryptSelectedFiles()
 	{
 		System.out.println("Decrypting files please wait...");
 		ArrayList<File> decryptedFiles = new ArrayList<>();
+		long totalMegaBytes = 0;
 
 		for(int i = 0; i < files.size(); i++)
 		{
@@ -102,11 +128,12 @@ public class Encryptor
 				else
 					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10));
 
-				CryptoUtils.decrypt(Encryptor.key, encryptedFile, decryptedFile);
+				CryptoUtils.decrypt(Encryptor.password, encryptedFile, decryptedFile);
 
 				Display.progressBar.setValue(i+1);
 				int percent = (int)(((double)(i+1)/(double)(files.size()))*100);
-				Display.progressText.setText("Decrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"%");
+				totalMegaBytes += (files.get(i).length()/1000000);
+				Display.progressText.setText("Decrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"% | "+totalMegaBytes+" MB");
 
 				if(!safeEncrypt)
 					encryptedFile.delete();
@@ -118,54 +145,69 @@ public class Encryptor
 		}
 		files = decryptedFiles;
 		Display.updateList(files);
+		CryptoUtils.resetKeySpecs();
 		System.out.println("File Decryption done, thank you!");
 	}
 
-	private static void promptKeyChoice()
+	/*
+	 *  Prompts the user if they want to generate a random password or enter a custom one.
+	 */
+	private static void promptPasswordChoice()
 	{
-		String[] options = new String[] {"Random Key", "Custom Key"};
-		int response = JOptionPane.showOptionDialog(null, "Would you like a randomly generated key, or a custom one?", "KeyPrompt",
+		String[] options = new String[] {"Random Password", "Custom Password"};
+		int response = JOptionPane.showOptionDialog(null, "Would you like a randomly generated password, or a custom one?", "PasswordPrompt",
 				JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
 				null, options, options[0]);
 
 		if(response == 0)
-			generateRandomKey();
+			generateRandomPassword();
 		else
-			getCustomKey();
+			getCustomPassword();
 	}
 
-	private static void generateRandomKey()
+	/*
+	 *  Generates a random ascii password
+	 *  from ascii values min-max (i'd recommend keeping it between 33-126 for normal chars, can cause errors otherwise)
+	 *  Has nothing to do with the key security it simply generates a random password for the user.
+	 */
+	private static void generateRandomPassword()
 	{
-		String randKey = "";
-		int keyLength = 32;
+		String randPassword = "";
+		int passwordLength = 48;
+		SecureRandom random = new SecureRandom();
+		int max = 126;
+		int min = 33;
 
-		for(int i = 0; i < keyLength; i++)
+		for(int i = 0; i < passwordLength; i++)
 		{
-			int asciiValue = 33 + (int)(Math.random() * ((126 - 33) + 1));
+			int asciiValue = random.nextInt(max-min+1)+min;
 			char toAppend = (char)asciiValue;
-			randKey += toAppend;
+			randPassword += toAppend;
 		}
 
-		showKey(randKey);
-
-		Encryptor.key = randKey;
+		showPassword(randPassword);
+		Encryptor.password = randPassword;
 	}
 
-	private static void showKey(String key)
+	/*
+	 *  Displays the randomly generated password to the user
+	 *  Allows the user to copy and save the password for future use.
+	 */
+	private static void showPassword(String password)
 	{
-		JTextArea ta = new JTextArea(1, 32);
-		ta.setText(key);
+		JTextArea ta = new JTextArea(1, password.length());
+		ta.setText(password);
 		ta.setWrapStyleWord(true);
 		ta.setLineWrap(true);
 		ta.setCaretPosition(0);
 		ta.setEditable(false);
 
-		int n = JOptionPane.showOptionDialog(null, new JScrollPane(ta),"YOUR KEY, PLEASE SAVE.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+		int n = JOptionPane.showOptionDialog(null, new JScrollPane(ta),"YOUR PASSWORD, PLEASE SAVE.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 				null, new Object[] {"Copy to clipboard", "OK"}, JOptionPane.YES_OPTION);
 
 		if (n == JOptionPane.YES_OPTION)
 		{
-			StringSelection stringSelection = new StringSelection(key);
+			StringSelection stringSelection = new StringSelection(password);
 			Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
 			cb.setContents(stringSelection, null);
 			JOptionPane.showMessageDialog(null, "Copied to clipboard!", "Copied!", JOptionPane.INFORMATION_MESSAGE,null);
@@ -175,32 +217,24 @@ public class Encryptor
 		}
 	}
 
-	private static void getCustomKey()
+	/*
+	 *  Allows the user to enter a custom password
+	 *  Used in Encryption
+	 */
+	private static void getCustomPassword()
 	{
-		int diff = 0;
-		String customKey = JOptionPane.showInputDialog(null, "Enter your custom key (no more than 32 characters)");
-		while(customKey.length() > 32)
-			customKey = JOptionPane.showInputDialog(null, "Enter your custom key (Please enter one no more than 32 characters!)");
-		if(customKey.length() < 32) diff = 32 - customKey.length();
-
-		for(int i = 0; i < diff; i++)
-			customKey += "-";
-
-		Encryptor.key = customKey;
+		String customPassword = JOptionPane.showInputDialog(null, "Enter your custom password");
+		Encryptor.password = customPassword;
 	}
 
-	private static void promptKey()
+	/*
+	 *  Prompts the decrypt password from the user
+	 *  Used in Decryption
+	 */
+	private static void promptPassword()
 	{
-		int diff = 0;
-		String promptedKey = JOptionPane.showInputDialog(null, "Enter your key!");
-		Encryptor.key = promptedKey;
-
-		if(promptedKey.length() < 32) diff = 32 - promptedKey.length();
-
-		for(int i = 0; i < diff; i++)
-			promptedKey += "-";
-
-		Encryptor.key = promptedKey;
+		String promptedPassword = JOptionPane.showInputDialog(null, "Enter your password!");
+		Encryptor.password = promptedPassword;
 	}
 
 	public static void setFiles(ArrayList<File> files)
@@ -209,6 +243,9 @@ public class Encryptor
 	}
 	public static ArrayList<File> getFiles() { return files; }
 
+	/*
+	 *  Adds an ArrayList of File types to the selected files list
+	 */
 	public static void addFiles(ArrayList<File> files)
 	{
 		Encryptor.files.addAll(files);
@@ -217,18 +254,17 @@ public class Encryptor
 		Encryptor.printInformation();
 	}
 
+	/*
+	 *  Removes any files that have the same absolute path from the selected files list.
+	 */
 	public static void removeRepeatFiles()
 	{
-		// Store unique items in result.
 		ArrayList<File> result = new ArrayList<>();
 
-		// Record encountered Files in HashSet.
 		HashSet<File> set = new HashSet<>();
 
-		// Loop over argument list.
 		for (File item : Encryptor.files)
 		{
-			// If File is not in set, add it to the list and the set.
 			if (!set.contains(item))
 			{
 				result.add(item);
@@ -239,11 +275,12 @@ public class Encryptor
 		Encryptor.files = result;
 	}
 
+	/*
+	 *  Removes any files that don't end in .encrypted from the selected files list.
+	 */
 	private static void removeNonEncryptedFiles()
 	{
 		ArrayList<File> nonEnc = new ArrayList<>();
-		//I dont remove them in the same loop, because removing elements from a list while looping causes bad errors.
-		//getting all the non encrypted files
 		for(int i = 0; i < files.size(); i++)
 		{
 			if(!files.get(i).getAbsolutePath().substring(files.get(i).getAbsolutePath().length()-10).equals(".encrypted"))
@@ -259,6 +296,9 @@ public class Encryptor
 		Display.updateList(files);
 	}
 
+	/*
+	 *  Clears all files from the selected file list.
+	 */
 	public static void clearSelectedFiles()
 	{
 		Encryptor.files.clear();
@@ -266,7 +306,10 @@ public class Encryptor
 		System.out.println("Cleared selected files.");
 	}
 
-	//wasnt allowing 256 key length for some reason, so added this
+	/*
+	 *  Allows 256 bit keys even if the required java security files aren't installed.
+	 *  Mine wouldn't install correctly so this does what the files would do, essentially.
+	 */
 	private static void fixKeyLength() {
 		String errorString = "Failed manually overriding key-length permissions.";
 		int newMaxKeyLength;
@@ -308,6 +351,9 @@ public class Encryptor
 			throw new RuntimeException(errorString); // hack failed
 	}
 
+	/*
+	 *  Prints all the files that are selected into the console log.
+	 */
 	public static void printInformation()
 	{
 		if(files.size() == 0)
