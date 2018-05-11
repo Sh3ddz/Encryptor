@@ -15,28 +15,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Map;
-
-//ABOUT:
-//          This encryptor uses AES encryption algorithm with a 256 bit key and random iv values for extreme security.
-//          it only requires the 256 bit or 32 char key/password to decrypt the files for ease of access.
-
-//TO DO:DONEprompt the user to enter a key or generate a random one
-//          drag and drop files into the window to select them.
-//          create a list like UI interface to select / deselect files for encryption / decryption
-//   DONE   Have an option for safe encryption or not (safe encryption doesnt overwrite or delete the original file, just adds a .encrypted and .decrypted file.)
-
-/*
+/**
+ * @author Sh3ddz - https://github.com/Sh3ddz
  * This class doesn't actually handle the encryption, but just about everything else.
  */
 public class Encryptor
 {
 	private static ArrayList<File> files;
-	//256 bit key, 32 chars.
 	private static String password;
-	public static boolean safeEncrypt = true;
 
 	private static final int ENCRYPT = 1;
 	private static final int DECRYPT = 2;
+
+	public static boolean safeEncrypt = false;
 
 	public Encryptor()
 	{
@@ -44,19 +35,21 @@ public class Encryptor
 		fixKeyLength();
 	}
 
-	/*
-	 *  Sets up for encryption
-	 *  Sets up the progress bar to show encryption progress
+	/**
+	 * Sets up for encryption
+	 * Sets up the progress bar to show encryption progress
 	 */
 	public static void setupEncryption()
 	{
 		promptPasswordChoice();
+		if(password == null)
+			return;
 
 		Display.setupProgressBar(ENCRYPT);
 	}
 
-	/*
-	 *  Loops through the selected files list and encrypts them using the password entered by the user
+	/**
+	 * Loops through the selected files list and encrypts them using the password entered by the user
 	 */
 	public static void encryptSelectedFiles()
 	{
@@ -91,12 +84,12 @@ public class Encryptor
 		System.out.println("File Encryption done, thank you!");
 	}
 
-	/*
-	 *  Sets up for smooth decryption
-	 *  removes non-encrypted files so it doesnt loop through and decrypt files that dont need to be
-	 *  removes repeated files for the same reason as above
-	 *  prompts the user to enter the password for decryption
-	 *  Sets up the progress bar to show decryption progress
+	/**
+	 * Sets up for smooth decryption
+	 * removes non-encrypted files so it doesnt loop through and decrypt files that dont need to be
+	 * removes repeated files for the same reason as above
+	 * prompts the user to enter the password for decryption
+	 * Sets up the progress bar to show decryption progress
 	 */
 	public static void setupDecryption()
 	{
@@ -107,8 +100,8 @@ public class Encryptor
 		Display.setupProgressBar(DECRYPT);
 	}
 
-	/*
-	 *  Loops through the selected files list and decrypts them using the password entered by the user
+	/**
+	 * Loops through the selected files list and decrypts them using the password entered by the user
 	 */
 	public static void decryptSelectedFiles()
 	{
@@ -128,16 +121,22 @@ public class Encryptor
 				else
 					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10));
 
+
 				CryptoUtils.decrypt(Encryptor.password, encryptedFile, decryptedFile);
+				//if it successfully decrypted
+				if(CryptoUtils.successfulCrypto)
+				{
+					Display.progressBar.setValue(i + 1);
+					int percent = (int) (((double) (i + 1) / (double) (files.size())) * 100);
+					totalMegaBytes += (files.get(i).length() / 1000000);
+					Display.progressText.setText("Decrypting Files: " + (i + 1) + "/" + files.size() + " | " + percent + "% | " + totalMegaBytes + " MB");
 
-				Display.progressBar.setValue(i+1);
-				int percent = (int)(((double)(i+1)/(double)(files.size()))*100);
-				totalMegaBytes += (files.get(i).length()/1000000);
-				Display.progressText.setText("Decrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"% | "+totalMegaBytes+" MB");
-
-				if(!safeEncrypt)
-					encryptedFile.delete();
-				decryptedFiles.add(decryptedFile);
+					if(!safeEncrypt)
+						encryptedFile.delete();
+					decryptedFiles.add(decryptedFile);
+				}
+				else //if it doesn't successfully decrypt, keep the encrypted files in the selected files list.
+					decryptedFiles.add(encryptedFile);
 			} catch(Exception ex)
 			{
 				ex.printStackTrace();
@@ -149,13 +148,13 @@ public class Encryptor
 		System.out.println("File Decryption done, thank you!");
 	}
 
-	/*
-	 *  Prompts the user if they want to generate a random password or enter a custom one.
+	/**
+	 * Prompts the user if they want to generate a random password or enter a custom one.
 	 */
 	private static void promptPasswordChoice()
 	{
 		String[] options = new String[] {"Random Password", "Custom Password"};
-		int response = JOptionPane.showOptionDialog(null, "Would you like a randomly generated password, or a custom one?", "PasswordPrompt",
+		int response = JOptionPane.showOptionDialog(Display.getFrame(), "Would you like a randomly generated password, or a custom one?", "PasswordPrompt",
 				JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
 				null, options, options[0]);
 
@@ -165,10 +164,10 @@ public class Encryptor
 			getCustomPassword();
 	}
 
-	/*
-	 *  Generates a random ascii password
-	 *  from ascii values min-max (i'd recommend keeping it between 33-126 for normal chars, can cause errors otherwise)
-	 *  Has nothing to do with the key security it simply generates a random password for the user.
+	/**
+	 * Generates a random ascii password
+	 * from ascii values min-max (i'd recommend keeping it between 33-126 for normal chars, can cause errors otherwise)
+	 * Has nothing to do with the key security it simply generates a random password for the user.
 	 */
 	private static void generateRandomPassword()
 	{
@@ -189,9 +188,10 @@ public class Encryptor
 		Encryptor.password = randPassword;
 	}
 
-	/*
-	 *  Displays the randomly generated password to the user
-	 *  Allows the user to copy and save the password for future use.
+	/**
+	 * Displays the randomly generated password to the user
+	 * Allows the user to copy and save the password for future use.
+	 * @param password
 	 */
 	private static void showPassword(String password)
 	{
@@ -202,7 +202,7 @@ public class Encryptor
 		ta.setCaretPosition(0);
 		ta.setEditable(false);
 
-		int n = JOptionPane.showOptionDialog(null, new JScrollPane(ta),"YOUR PASSWORD, PLEASE SAVE.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+		int n = JOptionPane.showOptionDialog(Display.getFrame(), new JScrollPane(ta),"YOUR PASSWORD, PLEASE SAVE.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 				null, new Object[] {"Copy to clipboard", "OK"}, JOptionPane.YES_OPTION);
 
 		if (n == JOptionPane.YES_OPTION)
@@ -210,41 +210,49 @@ public class Encryptor
 			StringSelection stringSelection = new StringSelection(password);
 			Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
 			cb.setContents(stringSelection, null);
-			JOptionPane.showMessageDialog(null, "Copied to clipboard!", "Copied!", JOptionPane.INFORMATION_MESSAGE,null);
+			JOptionPane.showMessageDialog(Display.getFrame(), "Copied to clipboard!", "Copied!", JOptionPane.INFORMATION_MESSAGE,null);
  		} else if (n == JOptionPane.NO_OPTION)
 		{
 			System.out.println("OK");
 		}
 	}
 
-	/*
-	 *  Allows the user to enter a custom password
-	 *  Used in Encryption
+	/**
+	 * Allows the user to enter a custom password
+	 * Used in Encryption
 	 */
 	private static void getCustomPassword()
 	{
-		String customPassword = JOptionPane.showInputDialog(null, "Enter your custom password");
+		String customPassword = JOptionPane.showInputDialog(Display.getFrame(), "Enter your custom password");
 		Encryptor.password = customPassword;
 	}
 
-	/*
-	 *  Prompts the decrypt password from the user
-	 *  Used in Decryption
+	/**
+	 * Prompts the decrypt password from the user
+	 * Used in Decryption
 	 */
 	private static void promptPassword()
 	{
-		String promptedPassword = JOptionPane.showInputDialog(null, "Enter your password!");
+		String promptedPassword = JOptionPane.showInputDialog(Display.getFrame(), "Enter your password!");
 		Encryptor.password = promptedPassword;
 	}
 
+	/**
+	 * @param files
+	 */
 	public static void setFiles(ArrayList<File> files)
 	{
 		Encryptor.files = files;
 	}
+
+	/**
+	 * @return Arraylist of files
+	 */
 	public static ArrayList<File> getFiles() { return files; }
 
-	/*
-	 *  Adds an ArrayList of File types to the selected files list
+	/**
+	 * Adds an ArrayList of File types to the selected files list
+	 * @param files
 	 */
 	public static void addFiles(ArrayList<File> files)
 	{
@@ -254,8 +262,8 @@ public class Encryptor
 		Encryptor.printInformation();
 	}
 
-	/*
-	 *  Removes any files that have the same absolute path from the selected files list.
+	/**
+	 * Removes any files that have the same absolute path from the selected files list.
 	 */
 	public static void removeRepeatFiles()
 	{
@@ -275,8 +283,8 @@ public class Encryptor
 		Encryptor.files = result;
 	}
 
-	/*
-	 *  Removes any files that don't end in .encrypted from the selected files list.
+	/**
+	 * Removes any files that don't end in .encrypted from the selected files list.
 	 */
 	private static void removeNonEncryptedFiles()
 	{
@@ -296,8 +304,8 @@ public class Encryptor
 		Display.updateList(files);
 	}
 
-	/*
-	 *  Clears all files from the selected file list.
+	/**
+	 * Clears all files from the selected file list.
 	 */
 	public static void clearSelectedFiles()
 	{
@@ -306,9 +314,9 @@ public class Encryptor
 		System.out.println("Cleared selected files.");
 	}
 
-	/*
-	 *  Allows 256 bit keys even if the required java security files aren't installed.
-	 *  Mine wouldn't install correctly so this does what the files would do, essentially.
+	/**
+	 * Allows 256 bit keys even if the required java security files aren't installed.
+	 * Mine wouldn't install correctly so this does what the files would do, essentially.
 	 */
 	private static void fixKeyLength() {
 		String errorString = "Failed manually overriding key-length permissions.";
@@ -351,8 +359,8 @@ public class Encryptor
 			throw new RuntimeException(errorString); // hack failed
 	}
 
-	/*
-	 *  Prints all the files that are selected into the console log.
+	/**
+	 * Prints all the files that are selected into the console log.
 	 */
 	public static void printInformation()
 	{

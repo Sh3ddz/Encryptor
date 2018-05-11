@@ -12,7 +12,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-
+/**
+ * @author Sh3ddz - https://github.com/Sh3ddz
+ */
 public class MenuBar extends JFrame implements MenuListener, ActionListener, KeyListener
 {
 	private JMenuBar menuBar;
@@ -39,6 +41,9 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		init();
 	}
 
+	/**
+	 * initializes the menu bar and components of it
+	 */
 	private void init()
 	{
 		this.addKeyListener(this);
@@ -87,7 +92,7 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		safeEncrypt = new JCheckBoxMenuItem("Safe Encrypt");
 		safeEncrypt.setMnemonic(KeyEvent.VK_S);
 		safeEncrypt.setDisplayedMnemonicIndex(1);
-		safeEncrypt.setSelected(true);
+		safeEncrypt.setSelected(Encryptor.safeEncrypt);
 		optionsMenu.add(safeEncrypt);
 		safeEncrypt.addItemListener(new ItemListener()
 		{
@@ -137,11 +142,18 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		fileMenu.add(exit);
 	}
 
+	/**
+	 * @return the JMenuBar object
+	 */
 	public JMenuBar getJMenuBar()
 	{
 		return this.menuBar;
 	}
 
+	/**
+	 * Sets up the action events of the menu bar
+	 * @param e
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
@@ -175,12 +187,20 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 			openWebpage("https://www.youtube.com/watch?v=7R8IUnq9kEs");
 	}
 
+	/**
+	 * Does nothing currently
+	 * @param e
+	 */
 	@Override
 	public void keyTyped(KeyEvent e)
 	{
 
 	}
 
+	/**
+	 * checks for key presses and executes actions accordingly
+	 * @param e
+	 */
 	@Override
 	public void keyPressed(KeyEvent e)
 	{
@@ -190,12 +210,20 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		}
 	}
 
+	/**
+	 * Does nothing currently
+	 * @param e
+	 */
 	@Override
 	public void keyReleased(KeyEvent e)
 	{
 
 	}
 
+	/**
+	 * Detects the menu clicks
+	 * @param e
+	 */
 	@Override
 	public void menuSelected(MenuEvent e)
 	{
@@ -205,18 +233,31 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		}
 	}
 
+	/**
+	 * Does nothing currently
+	 * @param e
+	 */
 	@Override
 	public void menuDeselected(MenuEvent e)
 	{
 
 	}
 
+	/**
+	 * Does nothing currently
+	 * @param e
+	 */
 	@Override
 	public void menuCanceled(MenuEvent e)
 	{
 
 	}
 
+	/**
+	 * Opens the webpage of the given URI
+	 * @param uri
+	 * @return if the webpage was opened or not
+	 */
 	public static boolean openWebpage(URI uri)
 	{
 		Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
@@ -235,6 +276,11 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		return false;
 	}
 
+	/**
+	 * If the given URI is in string format it will convert it to a URI and call the other method above
+	 * @param urlString
+	 * @return if the webpage was opened or not
+	 */
 	public static boolean openWebpage(String urlString)
 	{
 		try

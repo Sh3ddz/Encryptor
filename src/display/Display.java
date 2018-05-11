@@ -14,7 +14,9 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
-
+/**
+ * @author Sh3ddz - https://github.com/Sh3ddz
+ */
 public class Display
 {
 
@@ -49,7 +51,9 @@ public class Display
 		Display.height = height;
 		createDisplay();
 	}
-
+	/**
+	 * sets up all global variables and puts everything within the panel / frame
+	 */
 	private void createDisplay()
 	{
 		frame = new JFrame(title);
@@ -144,6 +148,10 @@ public class Display
 		frame.pack();
 	}
 
+	/**
+	 * makes the component parameter have drag and drop capabilities.
+	 * @param component
+	 */
 	private void enableDragAndDrop(Component component)
 	{
 		DropTarget target=new DropTarget(component ,new DropTargetListener(){
@@ -172,6 +180,11 @@ public class Display
 		});
 	}
 
+	/**
+	 * Sets up the progress bar and swingworker depending on the mode
+	 * 1 = Encrypt, 2 = Decrypt
+	 * @param mode
+	 */
 	public static void setupProgressBar(int mode)
 	{
 		final JDialog dlg;
@@ -219,6 +232,10 @@ public class Display
 		dlg.setVisible(true);
 	}
 
+	/**
+	 * Updates the display JList with the given ArrayList of files
+	 * @param files
+	 */
 	public static void updateList(ArrayList<File> files)
 	{
 		DefaultListModel listModel = new DefaultListModel();
@@ -231,21 +248,34 @@ public class Display
 		fileList.setModel(listModel);
 	}
 
+	/**
+	 * @return the canvas
+	 */
 	public Canvas getCanvas()
 	{
 		return canvas;
 	}
 
+	/**
+	 * @return the frame
+	 */
 	public static JFrame getFrame()
 	{
 		return frame;
 	}
 
+	/**
+	 * @return the menu bar
+	 */
 	public MenuBar getMenuBar()
 	{
 		return menuBar;
 	}
 
+	/**
+	 * Opens the Console (output log)
+	 * adds it to the JPanel and adjusts the size of the other components.
+	 */
 	protected static void openConsole()
 	{
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -258,6 +288,10 @@ public class Display
 		panel.updateUI();
 	}
 
+	/**
+	 * Closes the Console (output log)
+	 * removes it from the JPanel and adjusts the size of the other components.
+	 */
 	protected static void closeConsole()
 	{
 		c.fill = GridBagConstraints.HORIZONTAL;

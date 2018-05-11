@@ -6,11 +6,16 @@ import javax.swing.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Stack;
-
+/**
+ * @author Sh3ddz - https://github.com/Sh3ddz
+ */
 public class FileSelectionUtils
 {
-	//Gets ALL the files in the directory, including all subdirectories and files within them
-	//NON recursive, using stacks.
+	/**
+	 * gets all the files that are in the selected directory or multiple directories
+	 * @param everythingInDirectory all the directories and files that the user selected
+	 * @return Arraylist of files, all the files within selected directories as well as selected files
+	 */
 	public static ArrayList<File> getAllFilesInDir(File[] everythingInDirectory)
 	{
 		ArrayList<File> files = new ArrayList<File>();
@@ -56,7 +61,9 @@ public class FileSelectionUtils
 
 		return files;
 	}
-
+	/**
+	 * Sets up a file chooser and allows the user to select files in the file chooser
+	 */
 	public static void selectFiles()
 	{
 		JFileChooser fileChooser = new JFileChooser();

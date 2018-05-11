@@ -1,12 +1,12 @@
 package main;
 
-import java.awt.Graphics;
-import java.awt.image.BufferStrategy;
 import java.io.IOException;
 
 import display.Display;
 import encryption.Encryptor;
-
+/**
+ * @author Sh3ddz - https://github.com/Sh3ddz
+ */
 public class Application implements Runnable
 {
 	private Encryptor encryptor;
@@ -17,17 +17,6 @@ public class Application implements Runnable
 	private boolean running = false;
 	private Thread thread;
 
-	private BufferStrategy bs;
-	private Graphics g;
-
-	//config
-	private int TPS = 0;
-	private int FPS = 0;
-	private int seconds = 0;
-	private int minutes = 0;
-	private int hours = 0;
-	public boolean debugMode = false;
-
 	public Application(String title, int width, int height)
 	{
 		this.width = width;
@@ -35,6 +24,9 @@ public class Application implements Runnable
 		this.title = title;
 	}
 
+	/**
+	 * initializes encryptor and display
+	 */
 	private void init()
 	{
 		//initializing the display
@@ -42,11 +34,17 @@ public class Application implements Runnable
 		this.display = new Display(title, width, height);
 	}
 
+	/**
+	 * ticks the program
+	 */
 	private void tick() throws IOException
 	{
 
 	}
 
+	/**
+	 * Renders the program
+	 */
 	private void render()
 	{
 		//Draw Here!
@@ -57,6 +55,9 @@ public class Application implements Runnable
 		//g.dispose();
 	}
 
+	/**
+	 * Runs the program, Main loop.
+	 */
 	public void run()
 	{
 		init();
@@ -77,16 +78,25 @@ public class Application implements Runnable
 
 	}
 
+	/**
+	 * @return width of application
+	 */
 	public int getWidth()
 	{
 		return this.width;
 	}
 
+	/**
+	 * @return height of application
+	 */
 	public int getHeight()
 	{
 		return this.height;
 	}
 
+	/**
+	 * Starts the thread and run() method
+	 */
 	public synchronized void start()
 	{
 		if(running)
@@ -96,6 +106,9 @@ public class Application implements Runnable
 		thread.start();
 	}
 
+	/**
+	 * Stops the thread on close.
+	 */
 	public synchronized void stop()
 	{
 		if(!running)

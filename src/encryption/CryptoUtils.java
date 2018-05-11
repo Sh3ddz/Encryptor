@@ -8,16 +8,20 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-
-
+/**
+ * @author Sh3ddz - https://github.com/Sh3ddz
+ */
 public class CryptoUtils
 {
 	private static final String ALGORITHM = "AES";
 	private static final String TRANSFORMATION = "AES/CBC/PKCS5Padding";
 	private static SecretKey secretKey;
 	private static byte[] salt;
-	/*
-	 *  Generates secure random salt value
+
+	public static boolean successfulCrypto = false;
+	/**
+	 * Generates secure random salt value
+	 * @return array of random salt bytes
 	 */
 	private static byte[] generateSalt()
 	{
@@ -27,8 +31,9 @@ public class CryptoUtils
 		return bytes;
 	}
 
-	/*
-	 *  Generates the secret key using the given password and salt values from the file
+	/**
+	 * Generates the secret key using the given password and salt values from the file
+	 * @param password
 	 */
 	private static void generateSecretKey(String password)
 	{
@@ -48,19 +53,27 @@ public class CryptoUtils
 		}
 	}
 
+	/**
+	 * Resets the secret key and salt values,
+	 * so it can encrypt multiple different instances without restarting
+	 */
 	public static void resetKeySpecs()
 	{
 		secretKey = null;
 		salt = null;
 	}
 
-	/*
-	 *  Encrypts the selected input file using the given password
-	 *  Generates the secret key given the password
-	 *  Generates a secure random IV for each file
+	/**
+	 * Encrypts the selected input file using the given password
+	 * Generates the secret key given the password
+	 * Generates a secure random IV for each file
 	 *
-	 *  Writes the IV, salt, and ciphertext to the output file.
-	 *  Using AES 256 bit encryption.
+	 * Writes the IV, salt, and ciphertext to the output file.
+	 * Using AES 256 bit encryption.
+	 * @param password
+	 * @param inputFile
+	 * @param outputFile
+	 * @throws CryptoException
 	 */
 	public static void encrypt(String password, File inputFile, File outputFile) throws CryptoException
 	{
@@ -98,20 +111,25 @@ public class CryptoUtils
 
 			inputStream.close();
 			outputStream.close();
-
+			successfulCrypto = true;
 		} catch (Exception ex)
 		{
+			successfulCrypto = false;
 			throw new CryptoException("Error encrypting/decrypting file", ex);
 		}
 	}
 
-	/*
-	 *  Decrypts the selected input file using the given password
-	 *  Reads the IV values from the file to use for decryption
-	 *  Reads the salt values from the file to use to generate the secret key
-	 *  Outputs the decrypted text to the selected output file
+	/**
+	 * Decrypts the selected input file using the given password
+	 * Reads the IV values from the file to use for decryption
+	 * Reads the salt values from the file to use to generate the secret key
+	 * Outputs the decrypted text to the selected output file
 	 *
-	 *  Using AES 256 bit encryption.
+	 * Using AES 256 bit encryption.
+	 * @param password
+	 * @param inputFile
+	 * @param outputFile
+	 * @throws CryptoException
 	 */
 	public static void decrypt(String password, File inputFile, File outputFile) throws CryptoException
 	{
@@ -137,7 +155,9 @@ public class CryptoUtils
 			{
 				System.out.println("WRONG KEY for file: " + inputFile.getAbsolutePath());
 				inputStream.close();
-				outputFile.delete();
+				if(Encryptor.safeEncrypt)
+					outputFile.delete();
+				successfulCrypto = false;
 				return;
 			}
 
@@ -152,16 +172,20 @@ public class CryptoUtils
 
 			inputStream.close();
 			outputStream.close();
-
+			successfulCrypto = true;
 		} catch (Exception ex)
 		{
+			successfulCrypto = false;
 			throw new CryptoException("Error encrypting/decrypting file", ex);
 		}
 	}
 
-	/*
+	/**
      * Checks if the given decryption key is right
      * returns true if the key is valid, returns false if the key is not valid
+	 * @param cipher
+	 * @param headerBytes
+	 * @return if the key is valid or not
 	 */
 	private static boolean checkKeyValidity(Cipher cipher, byte[] headerBytes)
 	{
@@ -174,11 +198,11 @@ public class CryptoUtils
 				return false;
 		} catch(BadPaddingException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 			return false;
 		} catch(Exception e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return true;
 	}
