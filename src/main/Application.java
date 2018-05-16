@@ -1,7 +1,5 @@
 package main;
 
-import java.io.IOException;
-
 import display.Display;
 import encryption.Encryptor;
 /**
@@ -35,63 +33,11 @@ public class Application implements Runnable
 	}
 
 	/**
-	 * ticks the program
-	 */
-	private void tick() throws IOException
-	{
-
-	}
-
-	/**
-	 * Renders the program
-	 */
-	private void render()
-	{
-		//Draw Here!
-		width = display.getFrame().getWidth();
-		height = display.getFrame().getHeight();
-		//End Drawing!
-		//bs.show();
-		//g.dispose();
-	}
-
-	/**
 	 * Runs the program, Main loop.
 	 */
 	public void run()
 	{
 		init();
-
-		while(running)
-		{
-			try
-			{
-				tick();
-			} catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-			render();
-		}
-
-		stop();
-
-	}
-
-	/**
-	 * @return width of application
-	 */
-	public int getWidth()
-	{
-		return this.width;
-	}
-
-	/**
-	 * @return height of application
-	 */
-	public int getHeight()
-	{
-		return this.height;
 	}
 
 	/**

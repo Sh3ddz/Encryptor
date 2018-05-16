@@ -8,9 +8,6 @@ public class Launcher
 {
 	public static void main(String[] args)
 	{
-		Application app = new Application("Encryptor", 640, 480);
-		app.start();
-
 		try
 		{
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
@@ -18,5 +15,8 @@ public class Launcher
 		{
 			e.printStackTrace();
 		}
+
+		Application app = new Application("Encryptor", 640, 480);
+		app.start();
 	}
 }

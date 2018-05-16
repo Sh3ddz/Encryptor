@@ -19,7 +19,6 @@ import javax.swing.text.DefaultCaret;
  */
 public class Display
 {
-
 	private static JFrame frame;
 	private static JPanel panel;
 	private Canvas canvas;

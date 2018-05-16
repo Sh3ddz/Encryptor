@@ -104,7 +104,7 @@ public class CryptoUtils
 
 			byte[] buffer = new byte[8192];
 			int count;
-			while ((count = inputStream.read(buffer)) > 0)
+			while((count = inputStream.read(buffer)) > 0)
 			{
 				outputStream.write(buffer, 0, count);
 			}
@@ -136,6 +136,7 @@ public class CryptoUtils
 		try
 		{
 			FileInputStream inputStream = new FileInputStream(inputFile);
+
 			byte[] headerBytes = new byte[48];
 			inputStream.read(headerBytes);
 			byte[] iv = new byte[16];
@@ -155,7 +156,7 @@ public class CryptoUtils
 			{
 				System.out.println("WRONG KEY for file: " + inputFile.getAbsolutePath());
 				inputStream.close();
-				if(Encryptor.safeEncrypt)
+				if(Encryptor.safeCrypt)
 					outputFile.delete();
 				successfulCrypto = false;
 				return;

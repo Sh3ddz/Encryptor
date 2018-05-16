@@ -27,7 +27,7 @@ public class Encryptor
 	private static final int ENCRYPT = 1;
 	private static final int DECRYPT = 2;
 
-	public static boolean safeEncrypt = false;
+	public static boolean safeCrypt = false;
 
 	public Encryptor()
 	{
@@ -70,7 +70,7 @@ public class Encryptor
 				totalMegaBytes += (files.get(i).length()/1000000);
 				Display.progressText.setText("Encrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"% | "+totalMegaBytes+" MB");
 
-				if(!safeEncrypt)
+				if(!safeCrypt)
 					inputFile.delete();
 				encryptedFiles.add(encryptedFile);
 			} catch(Exception ex)
@@ -116,7 +116,7 @@ public class Encryptor
 				File encryptedFile = files.get(i);
 				File decryptedFile;
 
-				if(safeEncrypt)
+				if(safeCrypt)
 					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10)+".decrypted");
 				else
 					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10));
@@ -131,7 +131,7 @@ public class Encryptor
 					totalMegaBytes += (files.get(i).length() / 1000000);
 					Display.progressText.setText("Decrypting Files: " + (i + 1) + "/" + files.size() + " | " + percent + "% | " + totalMegaBytes + " MB");
 
-					if(!safeEncrypt)
+					if(!safeCrypt)
 						encryptedFile.delete();
 					decryptedFiles.add(decryptedFile);
 				}

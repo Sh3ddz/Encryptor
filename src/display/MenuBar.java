@@ -22,7 +22,7 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 	private JMenuItem openFiles, printSelected, removeRepeat, clearFiles, exit;
 	private JMenuItem encrypt, decrypt;
 	private JMenuItem howToUse, tutorialLink;
-	private JCheckBoxMenuItem safeEncrypt, outputLog;
+	private JCheckBoxMenuItem safeCrypt, outputLog;
 
 	private ImageIcon openFile = new ImageIcon(getClass().getResource("/res/openfile.png"));
 	private ImageIcon print = new ImageIcon(getClass().getResource("/res/print.png"));
@@ -82,32 +82,52 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		fileMenu.add(clearFiles);
 
 		encrypt = new JMenuItem("Encrypt Selected Files", encryptImage);
+		encrypt.setMnemonic(KeyEvent.VK_E);
 		encrypt.addActionListener(this);
 		editMenu.add(encrypt);
 
 		decrypt = new JMenuItem("Decrypt Selected Files", decryptImage);
+		decrypt.setMnemonic(KeyEvent.VK_D);
 		decrypt.addActionListener(this);
 		editMenu.add(decrypt);
 
-		safeEncrypt = new JCheckBoxMenuItem("Safe Encrypt");
-		safeEncrypt.setMnemonic(KeyEvent.VK_S);
-		safeEncrypt.setDisplayedMnemonicIndex(1);
-		safeEncrypt.setSelected(Encryptor.safeEncrypt);
-		optionsMenu.add(safeEncrypt);
-		safeEncrypt.addItemListener(new ItemListener()
+		initToggleBoxes();
+
+		howToUse = new JMenuItem("How To Use", howTo);
+		howToUse.addActionListener(this);
+		helpMenu.add(howToUse);
+
+		tutorialLink = new JMenuItem("Watch the tutorial!", tutorial);
+		tutorialLink.addActionListener(this);
+		helpMenu.add(tutorialLink);
+
+		exit = new JMenuItem("Exit");
+		exit.setMnemonic(KeyEvent.VK_X);
+		exit.addActionListener(this);
+		fileMenu.add(exit);
+	}
+
+	private void initToggleBoxes()
+	{
+		safeCrypt = new JCheckBoxMenuItem("Safe Crypt");
+		safeCrypt.setMnemonic(KeyEvent.VK_S);
+		safeCrypt.setDisplayedMnemonicIndex(1);
+		safeCrypt.setSelected(Encryptor.safeCrypt);
+		optionsMenu.add(safeCrypt);
+		safeCrypt.addItemListener(new ItemListener()
 		{
 			@Override
 			public void itemStateChanged(ItemEvent e)
 			{
 				if(e.getStateChange() == ItemEvent.SELECTED)
 				{
-					Encryptor.safeEncrypt = true;
-					System.out.println("Safe Encrypt ENABLED");
+					Encryptor.safeCrypt = true;
+					System.out.println("Safe Crypt ENABLED");
 				}
 				if(e.getStateChange() == ItemEvent.DESELECTED)
 				{
-					Encryptor.safeEncrypt = false;
-					System.out.println("Safe Encrypt DISABLED");
+					Encryptor.safeCrypt = false;
+					System.out.println("Safe Crypt DISABLED");
 				}
 			}
 		});
@@ -128,18 +148,6 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 			}
 		});
 
-		howToUse = new JMenuItem("How To Use", howTo);
-		howToUse.addActionListener(this);
-		helpMenu.add(howToUse);
-
-		tutorialLink = new JMenuItem("Watch the tutorial!", tutorial);
-		tutorialLink.addActionListener(this);
-		helpMenu.add(tutorialLink);
-
-		exit = new JMenuItem("Exit");
-		exit.setMnemonic(KeyEvent.VK_X);
-		exit.addActionListener(this);
-		fileMenu.add(exit);
 	}
 
 	/**
