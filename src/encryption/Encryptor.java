@@ -21,11 +21,11 @@ import java.util.Map;
  */
 public class Encryptor
 {
-	private static ArrayList<File> files;
-	private static String password;
-
 	private static final int ENCRYPT = 1;
 	private static final int DECRYPT = 2;
+
+	private static ArrayList<File> files;
+	private static String password;
 
 	public static boolean safeCrypt = false;
 
@@ -57,10 +57,15 @@ public class Encryptor
 		ArrayList<File> encryptedFiles = new ArrayList<>();
 		long totalMegaBytes = 0;
 
+		long startTime = System.currentTimeMillis();
+		long elapsedTime = 0L;
+
 		for(int i = 0; i < files.size(); i++)
 		{
 			try
 			{
+				elapsedTime = System.currentTimeMillis() - startTime;
+
 				File inputFile = files.get(i);
 				File encryptedFile = new File(files.get(i).getAbsolutePath()+".encrypted");
 				CryptoUtils.encrypt(Encryptor.password, inputFile, encryptedFile);
@@ -68,7 +73,7 @@ public class Encryptor
 				Display.progressBar.setValue(i+1);
 				int percent = (int)(((double)(i+1)/(double)(files.size()))*100);
 				totalMegaBytes += (files.get(i).length()/1000000);
-				Display.progressText.setText("Encrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"% | "+totalMegaBytes+" MB");
+				Display.progressText.setText("Encrypting Files: "+(i+1)+"/"+files.size()+" | "+percent+"% | "+totalMegaBytes+" MB | "+elapsedTime/1000.0+"s elapsed");
 
 				if(!safeCrypt)
 					inputFile.delete();
@@ -78,6 +83,10 @@ public class Encryptor
 				ex.printStackTrace();
 			}
 		}
+
+		elapsedTime = System.currentTimeMillis() - startTime;
+		System.out.println("Encrypted "+files.size()+" files | "+totalMegaBytes+"MB in "+elapsedTime/1000.0+"s");
+
 		files = encryptedFiles;
 		Display.updateList(files);
 		CryptoUtils.resetKeySpecs();
@@ -109,10 +118,15 @@ public class Encryptor
 		ArrayList<File> decryptedFiles = new ArrayList<>();
 		long totalMegaBytes = 0;
 
+		long startTime = System.currentTimeMillis();
+		long elapsedTime = 0L;
+
 		for(int i = 0; i < files.size(); i++)
 		{
 			try
 			{
+				elapsedTime = System.currentTimeMillis() - startTime;
+
 				File encryptedFile = files.get(i);
 				File decryptedFile;
 
@@ -129,7 +143,7 @@ public class Encryptor
 					Display.progressBar.setValue(i + 1);
 					int percent = (int) (((double) (i + 1) / (double) (files.size())) * 100);
 					totalMegaBytes += (files.get(i).length() / 1000000);
-					Display.progressText.setText("Decrypting Files: " + (i + 1) + "/" + files.size() + " | " + percent + "% | " + totalMegaBytes + " MB");
+					Display.progressText.setText("Decrypting Files: " + (i + 1) + "/" + files.size() + " | " + percent + "% | " + totalMegaBytes + " MB | "+elapsedTime/1000.0+"s elapsed");
 
 					if(!safeCrypt)
 						encryptedFile.delete();
@@ -142,6 +156,9 @@ public class Encryptor
 				ex.printStackTrace();
 			}
 		}
+		elapsedTime = System.currentTimeMillis() - startTime;
+		System.out.println("Decrypted "+files.size()+" files | "+totalMegaBytes+"MB in "+elapsedTime/1000.0+"s");
+
 		files = decryptedFiles;
 		Display.updateList(files);
 		CryptoUtils.resetKeySpecs();

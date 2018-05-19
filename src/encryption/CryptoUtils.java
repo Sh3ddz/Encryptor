@@ -10,6 +10,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 /**
  * @author Sh3ddz - https://github.com/Sh3ddz
+ * This class handles the encryption / decryption
  */
 public class CryptoUtils
 {
@@ -115,7 +116,7 @@ public class CryptoUtils
 		} catch (Exception ex)
 		{
 			successfulCrypto = false;
-			throw new CryptoException("Error encrypting/decrypting file", ex);
+			throw new CryptoException("Error encrypting file", ex);
 		}
 	}
 
@@ -177,7 +178,7 @@ public class CryptoUtils
 		} catch (Exception ex)
 		{
 			successfulCrypto = false;
-			throw new CryptoException("Error encrypting/decrypting file", ex);
+			throw new CryptoException("Error decrypting file", ex);
 		}
 	}
 
@@ -197,13 +198,9 @@ public class CryptoUtils
 			String header = new String(headerBytes, "UTF-8");
 			if(!header.equals("HEADER Encrypted using Encryptor"))
 				return false;
-		} catch(BadPaddingException e)
-		{
-			//e.printStackTrace();
-			return false;
 		} catch(Exception e)
 		{
-			//e.printStackTrace();
+			return false;
 		}
 		return true;
 	}
