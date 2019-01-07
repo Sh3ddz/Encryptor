@@ -1,6 +1,7 @@
 package encryption;
 
 import display.Display;
+import main.Application;
 
 import javax.crypto.Cipher;
 import javax.swing.*;
@@ -40,7 +41,12 @@ public class Encryptor
 	 * Sets up the progress bar to show encryption progress
 	 */
 	public static void setupEncryption()
-	{
+	{;
+		if(files.isEmpty())
+		{
+			System.out.println("Please select files to encrypt.");
+			return;
+		}
 		promptPasswordChoice();
 		if(password == null)
 			return;
@@ -103,6 +109,11 @@ public class Encryptor
 	public static void setupDecryption()
 	{
 		removeNonEncryptedFiles();
+		if(files.isEmpty())
+		{
+			System.out.println("Please select files to decrypt.");
+			return;
+		}
 		removeRepeatFiles();
 		promptPassword();
 

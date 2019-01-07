@@ -26,6 +26,7 @@ public class Display
 
 	private JButton encrypt;
 	private JButton decrypt;
+	private JButton clear;
 
 	private JTextArea console;
 	private static JScrollPane consoleScroll;
@@ -42,6 +43,8 @@ public class Display
 
 	private String title;
 	private static int width, height;
+
+	private static int heightOffset = 86;
 
 	public Display(String title, int width, int height)
 	{
@@ -106,10 +109,28 @@ public class Display
 		c.gridy = 0;
 		panel.add(decrypt, c);
 
+		clear = new JButton("Clear Selected Files", this.menuBar.clear);
+		clear.setPreferredSize(new Dimension(width / 2, height / 11));
+		clear.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				Encryptor.clearSelectedFiles();
+			}
+		} );
+		c.fill = GridBagConstraints.VERTICAL;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.gridx = 1;
+		c.gridy = 2;
+		panel.add(clear, c);
+
 		fileList = new JList();
 		fileListScroll = new JScrollPane(fileList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		fileListScroll.setPreferredSize(new Dimension(width / 2, height-43));
+		fileListScroll.setPreferredSize(new Dimension(width / 2, height-heightOffset));
 		c.fill = GridBagConstraints.VERTICAL;
+		c.gridwidth = 1;
+		c.gridheight = 2;
 		c.gridx = 0;
 		c.gridy = 1;
 		panel.add(fileListScroll, c);
@@ -119,7 +140,7 @@ public class Display
 		dragAndDrop = new JTextArea("Drag and Drop Files here!\n");
 		dragAndDrop.append("<- Or there!");
 		dragAndDrop.setEditable(false);
-		dragAndDrop.setPreferredSize(new Dimension(width / 2, height-43));
+		dragAndDrop.setPreferredSize(new Dimension(width / 2, height-heightOffset));
 		c.fill = GridBagConstraints.VERTICAL;
 		c.gridwidth = 1;
 		c.gridheight = 1;
@@ -139,7 +160,8 @@ public class Display
 		console.setCaretPosition(console.getDocument().getLength());
 
 		consoleScroll = new JScrollPane(console, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		consoleScroll.setPreferredSize(new Dimension(width, (height / 2)-43));
+		consoleScroll.setPreferredSize(new Dimension(width, (height / 2)-heightOffset));
+		openConsole();
 
 		frame.setJMenuBar(menuBar.getJMenuBar());
 		frame.setIconImage(new ImageIcon(getClass().getResource("/res/encryptor.png")).getImage());
@@ -280,7 +302,7 @@ public class Display
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = 2;
+		c.gridy = 3;
 		panel.add(consoleScroll, c);
 		fileListScroll.setPreferredSize(new Dimension(width / 2, height/2));
 		dragAndDrop.setPreferredSize(new Dimension(width / 2, height/2));
@@ -296,10 +318,10 @@ public class Display
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = 2;
+		c.gridy = 3;
 		panel.remove(consoleScroll);
-		fileListScroll.setPreferredSize(new Dimension(width / 2, height-43));
-		dragAndDrop.setPreferredSize(new Dimension(width / 2, height-43));
+		fileListScroll.setPreferredSize(new Dimension(width / 2, height-heightOffset));
+		dragAndDrop.setPreferredSize(new Dimension(width / 2, height-heightOffset));
 		panel.updateUI();
 	}
 

@@ -27,7 +27,7 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 	private ImageIcon openFile = new ImageIcon(getClass().getResource("/res/openfile.png"));
 	private ImageIcon print = new ImageIcon(getClass().getResource("/res/print.png"));
 	private ImageIcon remove = new ImageIcon(getClass().getResource("/res/removerepeat.png"));
-	private ImageIcon clear = new ImageIcon(getClass().getResource("/res/clear.png"));
+	protected ImageIcon clear = new ImageIcon(getClass().getResource("/res/clear.png"));
 
 	protected ImageIcon encryptImage = new ImageIcon(getClass().getResource("/res/encrypt.png"));
 	protected ImageIcon decryptImage = new ImageIcon(getClass().getResource("/res/decrypt.png"));
@@ -135,6 +135,7 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 		outputLog = new JCheckBoxMenuItem("Output Log");
 		outputLog.setMnemonic(KeyEvent.VK_O);
 		outputLog.setDisplayedMnemonicIndex(1);
+		outputLog.setState(true);
 		optionsMenu.add(outputLog);
 		outputLog.addItemListener(new ItemListener()
 		{
@@ -147,7 +148,6 @@ public class MenuBar extends JFrame implements MenuListener, ActionListener, Key
 					Display.closeConsole();
 			}
 		});
-
 	}
 
 	/**
