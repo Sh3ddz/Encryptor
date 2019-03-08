@@ -8,6 +8,9 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -21,12 +24,11 @@ public class Display
 {
 	private static JFrame frame;
 	private static JPanel panel;
-	private Canvas canvas;
 	private MenuBar menuBar;
 
-	private JButton encrypt;
-	private JButton decrypt;
-	private JButton clear;
+	private static JButton encrypt;
+	private static JButton decrypt;
+	private static JButton clear;
 
 	private JTextArea console;
 	private static JScrollPane consoleScroll;
@@ -34,7 +36,7 @@ public class Display
 	private static JTextArea dragAndDrop;
 
 	private static JScrollPane fileListScroll;
-	public static JList fileList;
+	private static JList<File> fileList;
 
 	public static JProgressBar progressBar;
 	public static JLabel progressText;
@@ -65,12 +67,6 @@ public class Display
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
-
-		canvas = new Canvas();
-		canvas.setPreferredSize(new Dimension(width, height));
-		canvas.setMaximumSize(new Dimension(width, height));
-		canvas.setMinimumSize(new Dimension(width, height));
-		canvas.setFocusable(false);
 
 		menuBar = new MenuBar();
 
@@ -126,6 +122,14 @@ public class Display
 		panel.add(clear, c);
 
 		fileList = new JList();
+		fileList.addKeyListener(new KeyAdapter()
+		{
+			public void keyPressed(KeyEvent e)
+			{
+				if (e.getKeyCode() == KeyEvent.VK_DELETE)
+					removeFromList();
+			}
+		});
 		fileListScroll = new JScrollPane(fileList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		fileListScroll.setPreferredSize(new Dimension(width / 2, height-heightOffset));
 		c.fill = GridBagConstraints.VERTICAL;
@@ -196,7 +200,7 @@ public class Display
 					}
 					Encryptor.addFiles(FileSelectionUtils.getAllFilesInDir(files));
 
-				}catch(Exception ex){}
+				}catch(Exception ex){ ex.printStackTrace(); }
 			}
 		});
 	}
@@ -259,22 +263,29 @@ public class Display
 	 */
 	public static void updateList(ArrayList<File> files)
 	{
-		DefaultListModel listModel = new DefaultListModel();
+		DefaultListModel<File> listModel = new DefaultListModel<>();
 		for (Object item : files)
 		{
 			File file = (File) item;
 			listModel.addElement(file);
 		}
-
 		fileList.setModel(listModel);
 	}
 
 	/**
-	 * @return the canvas
+	 * Removes the selected file from the list
 	 */
-	public Canvas getCanvas()
+	public static void removeFromList()
 	{
-		return canvas;
+		DefaultListModel listModel = (DefaultListModel) fileList.getModel();
+		int selectedIndex = fileList.getSelectedIndex();
+		if(selectedIndex != -1)
+		{
+			System.out.println("Removed: "+listModel.get(selectedIndex));
+			listModel.remove(selectedIndex);
+			Encryptor.removeSelectedFile(selectedIndex);
+		}
+		fileList.setModel(listModel);
 	}
 
 	/**

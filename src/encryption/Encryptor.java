@@ -2,6 +2,7 @@ package encryption;
 
 import display.Display;
 import main.Application;
+import utils.FileSelectionUtils;
 
 import javax.crypto.Cipher;
 import javax.swing.*;
@@ -25,7 +26,11 @@ public class Encryptor
 	private static final int ENCRYPT = 1;
 	private static final int DECRYPT = 2;
 
+	private static final String ENCRYPT_FILE_EXTENSION = ".encrypted";
+	private static final String DECRYPT_FILE_EXTENSION = ".decrypted"; //this one is only used when safecrypt is on
+
 	private static ArrayList<File> files;
+	private static ArrayList<File> filesLastChanged; //files that were either encypted or decrypted during the last crypto
 	private static String password;
 
 	public static boolean safeCrypt = false;
@@ -33,6 +38,7 @@ public class Encryptor
 	public Encryptor()
 	{
 		files = new ArrayList<>();
+		filesLastChanged = new ArrayList<>();
 		fixKeyLength();
 	}
 
@@ -60,7 +66,7 @@ public class Encryptor
 	public static void encryptSelectedFiles()
 	{
 		System.out.println("Encrypting files please wait...");
-		ArrayList<File> encryptedFiles = new ArrayList<>();
+		filesLastChanged = new ArrayList<>(); //resetting the last changed files since this is a new operation
 		long totalMegaBytes = 0;
 
 		long startTime = System.currentTimeMillis();
@@ -73,7 +79,8 @@ public class Encryptor
 				elapsedTime = System.currentTimeMillis() - startTime;
 
 				File inputFile = files.get(i);
-				File encryptedFile = new File(files.get(i).getAbsolutePath()+".encrypted");
+				File encryptedFile = new File(FileSelectionUtils.removeFileExtension(files.get(i).getAbsolutePath())+ENCRYPT_FILE_EXTENSION);
+
 				CryptoUtils.encrypt(Encryptor.password, inputFile, encryptedFile);
 
 				Display.progressBar.setValue(i+1);
@@ -83,7 +90,7 @@ public class Encryptor
 
 				if(!safeCrypt)
 					inputFile.delete();
-				encryptedFiles.add(encryptedFile);
+				//encryptedFiles.add(encryptedFile);
 			} catch(Exception ex)
 			{
 				ex.printStackTrace();
@@ -93,7 +100,7 @@ public class Encryptor
 		elapsedTime = System.currentTimeMillis() - startTime;
 		System.out.println("Encrypted "+files.size()+" files | "+totalMegaBytes+"MB in "+elapsedTime/1000.0+"s");
 
-		files = encryptedFiles;
+		files = filesLastChanged; //Making the file list the last changed ones for ease of access.
 		Display.updateList(files);
 		CryptoUtils.resetKeySpecs();
 		System.out.println("File Encryption done, thank you!");
@@ -116,7 +123,8 @@ public class Encryptor
 		}
 		removeRepeatFiles();
 		promptPassword();
-
+		if(password == null) //if the user didnt enter a decrypt password or hit cancel, dont decrypt.
+			return;
 		Display.setupProgressBar(DECRYPT);
 	}
 
@@ -126,7 +134,7 @@ public class Encryptor
 	public static void decryptSelectedFiles()
 	{
 		System.out.println("Decrypting files please wait...");
-		ArrayList<File> decryptedFiles = new ArrayList<>();
+		filesLastChanged = new ArrayList<>(); //resetting the last changed files since this is a new operation
 		long totalMegaBytes = 0;
 
 		long startTime = System.currentTimeMillis();
@@ -142,9 +150,9 @@ public class Encryptor
 				File decryptedFile;
 
 				if(safeCrypt)
-					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10)+".decrypted");
+					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-ENCRYPT_FILE_EXTENSION.length())+DECRYPT_FILE_EXTENSION);
 				else
-					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-10));
+					decryptedFile = new File(files.get(i).getAbsolutePath().substring(0,files.get(i).getAbsolutePath().length()-ENCRYPT_FILE_EXTENSION.length()));
 
 
 				CryptoUtils.decrypt(Encryptor.password, encryptedFile, decryptedFile);
@@ -158,10 +166,10 @@ public class Encryptor
 
 					if(!safeCrypt)
 						encryptedFile.delete();
-					decryptedFiles.add(decryptedFile);
+					//addFilesLastChanged(decryptedFile);
 				}
 				else //if it doesn't successfully decrypt, keep the encrypted files in the selected files list.
-					decryptedFiles.add(encryptedFile);
+					addFilesLastChanged(encryptedFile);
 			} catch(Exception ex)
 			{
 				ex.printStackTrace();
@@ -170,7 +178,7 @@ public class Encryptor
 		elapsedTime = System.currentTimeMillis() - startTime;
 		System.out.println("Decrypted "+files.size()+" files | "+totalMegaBytes+"MB in "+elapsedTime/1000.0+"s");
 
-		files = decryptedFiles;
+		files = filesLastChanged; //Making the file list the last changed ones for ease of access.
 		Display.updateList(files);
 		CryptoUtils.resetKeySpecs();
 		System.out.println("File Decryption done, thank you!");
@@ -251,8 +259,7 @@ public class Encryptor
 	 */
 	private static void getCustomPassword()
 	{
-		String customPassword = JOptionPane.showInputDialog(Display.getFrame(), "Enter your custom password");
-		Encryptor.password = customPassword;
+		Encryptor.password = JOptionPane.showInputDialog(Display.getFrame(), "Enter your custom password");
 	}
 
 	/**
@@ -261,8 +268,7 @@ public class Encryptor
 	 */
 	private static void promptPassword()
 	{
-		String promptedPassword = JOptionPane.showInputDialog(Display.getFrame(), "Enter your password!");
-		Encryptor.password = promptedPassword;
+		Encryptor.password = JOptionPane.showInputDialog(Display.getFrame(), "Enter your password!");
 	}
 
 	/**
@@ -288,6 +294,11 @@ public class Encryptor
 		Encryptor.removeRepeatFiles();
 		Display.updateList(Encryptor.files);
 		Encryptor.printInformation();
+	}
+
+	public static void removeSelectedFile(int index)
+	{
+		files.remove(index);
 	}
 
 	/**
@@ -319,7 +330,7 @@ public class Encryptor
 		ArrayList<File> nonEnc = new ArrayList<>();
 		for(int i = 0; i < files.size(); i++)
 		{
-			if(!files.get(i).getAbsolutePath().substring(files.get(i).getAbsolutePath().length()-10).equals(".encrypted"))
+			if(!files.get(i).getAbsolutePath().substring(files.get(i).getAbsolutePath().length()-ENCRYPT_FILE_EXTENSION.length()).equals(ENCRYPT_FILE_EXTENSION))
 			{
 				nonEnc.add(files.get(i));
 			}
@@ -340,6 +351,15 @@ public class Encryptor
 		Encryptor.files.clear();
 		Display.updateList(files);
 		System.out.println("Cleared selected files.");
+	}
+
+	/**
+	 * Adds a file to the current last changed files list
+	 * @param file
+	 */
+	public static void addFilesLastChanged(File file)
+	{
+		filesLastChanged.add(file);
 	}
 
 	/**

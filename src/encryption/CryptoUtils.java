@@ -1,7 +1,10 @@
 package encryption;
+import utils.FileSelectionUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import javax.crypto.*;
@@ -97,9 +100,15 @@ public class CryptoUtils
 			byte[] headerBytes = header.getBytes("UTF-8");
 			headerBytes = cipher.doFinal(headerBytes);
 
+			String fileExtension = FileSelectionUtils.getFileExtension(inputFile.getAbsolutePath());
+			byte[] fileExtensionBytes = new byte[256];
+			System.arraycopy(fileExtension.getBytes("UTF-8"),0, fileExtensionBytes,0, fileExtension.getBytes("UTF-8").length);
+			//fileExtensionBytes = cipher.doFinal(fileExtensionBytes);
+
 			output.write(headerBytes);
 			output.write(iv);
 			output.write(salt);
+			output.write(fileExtensionBytes);
 
 			CipherOutputStream outputStream = new CipherOutputStream(output, cipher);
 
@@ -113,6 +122,7 @@ public class CryptoUtils
 			inputStream.close();
 			outputStream.close();
 			successfulCrypto = true;
+			Encryptor.addFilesLastChanged(outputFile);
 		} catch (Exception ex)
 		{
 			successfulCrypto = false;
@@ -144,6 +154,8 @@ public class CryptoUtils
 			inputStream.read(iv);
 			salt = new byte[20];
 			inputStream.read(salt);
+			byte[] fileExtensionBytes = new byte[256];
+			inputStream.read(fileExtensionBytes);
 
 			if(secretKey == null)
 				generateSecretKey(password);
@@ -163,6 +175,12 @@ public class CryptoUtils
 				return;
 			}
 
+			//getting the file extension data so it can transform the files back into their original extension types
+			//fileExtensionBytes = cipher.doFinal(fileExtensionBytes);
+			fileExtensionBytes = new String(fileExtensionBytes).replaceAll("\0", "").getBytes();
+			String fileExtension = new String(fileExtensionBytes, "UTF-8");
+			outputFile = new File(outputFile.getAbsolutePath()+"."+fileExtension);
+
 			CipherOutputStream outputStream = new CipherOutputStream(new FileOutputStream(outputFile), cipher);
 
 			byte[] buffer = new byte[8192];
@@ -175,6 +193,7 @@ public class CryptoUtils
 			inputStream.close();
 			outputStream.close();
 			successfulCrypto = true;
+			Encryptor.addFilesLastChanged(outputFile);
 		} catch (Exception ex)
 		{
 			successfulCrypto = false;

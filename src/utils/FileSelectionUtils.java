@@ -18,7 +18,7 @@ public class FileSelectionUtils
 	 */
 	public static ArrayList<File> getAllFilesInDir(File[] everythingInDirectory)
 	{
-		ArrayList<File> files = new ArrayList<File>();
+		ArrayList<File> files = new ArrayList<>();
 
 		//creating the filesStack so we can get every file within a directory and sub directories.
 		Stack<File> everythingStack = new Stack<>();
@@ -58,7 +58,6 @@ public class FileSelectionUtils
 				files.add(filesStack.pop());
 			}
 		}
-
 		return files;
 	}
 	/**
@@ -101,5 +100,66 @@ public class FileSelectionUtils
 
 			Encryptor.addFiles(files);
 		}
+	}
+
+	/**
+	 * Removes the file extension from the file path ex: abc.txt -> abc
+	 * @param path
+	 * @return the path of the file without the file extension
+	 */
+	public static String removeFileExtension(String path)
+	{
+		String inputFilePathTrimmed = "";
+		int loc = getFileExtensionLoc(path);
+		//if it's just a raw file type with no . anything
+		if(loc == 0)
+			inputFilePathTrimmed = path;
+		else //else trim it properly
+			inputFilePathTrimmed = path.substring(0, loc-1);
+		return inputFilePathTrimmed;
+	}
+
+	/**
+	 * Gets the file extension
+	 * @param path
+	 * @return the file extension
+	 */
+	public static String getFileExtension(String path)
+	{
+		int loc = getFileExtensionLoc(path);
+
+		if(loc == 0)
+			return path;
+		else
+			return path.substring(loc);
+	}
+
+	/**
+	 * Gets the length of the file extension
+	 * @param path
+	 * @return the length of the file extension
+	 */
+	public static int getFileExtensionLength(String path)
+	{
+		return path.length() - getFileExtensionLoc(path);
+	}
+
+	/**
+	 * Gets the location of the file extension in the path
+	 * @param path
+	 * @return the location of the file extension in the path
+	 */
+	private static int getFileExtensionLoc(String path)
+	{
+		int fileTypeLoc = 0;
+		for(int i = path.length(); i > 0; i--)
+		{
+			if(path.substring(i-1, i).equals("."))
+			{
+				fileTypeLoc = i;
+				break;
+			}
+		}
+		return fileTypeLoc;
 	}
 }
